@@ -46,6 +46,8 @@ $data = mysqli_fetch_assoc($sql);
 
     <title><?= htmlspecialchars($data['nama_subkategori']); ?></title>
 
+    <link rel="icon" type="image/x-icon" href="assets/img/logo-sma.png">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
