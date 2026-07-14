@@ -45,3 +45,33 @@
     width: 100%;
   }
 }
+
+/* ===========================================
+   NAVBAR ADMIN
+=========================================== */
+
+.navbar {
+  min-height: 70px;
+}
+
+.navbar .btn-primary {
+  border-radius: 30px;
+
+  padding: 8px 16px;
+}
+
+.dropdown-menu {
+  border-radius: 15px;
+}
+
+.dropdown-item {
+  padding: 10px 18px;
+}
+
+.dropdown-item:hover {
+  background: #f6f8fd;
+}
+
+.navbar .rounded-circle {
+  font-size: 20px;
+}
