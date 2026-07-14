@@ -106,9 +106,16 @@ $totalUser = mysqli_fetch_assoc(
 
                 </a>
 
-                <a href="logout.php" class="list-group-item list-group-item-action text-danger">
+                <!-- <a href="logout.php" class="list-group-item list-group-item-action text-danger">
 
                     <i class="bi bi-box-arrow-right"></i>
+
+                    Logout
+
+                </a> -->
+                <a href="logout.php" class="dropdown-item text-danger btn-logout">
+
+                    <i class="bi bi-box-arrow-right mr-2"></i>
 
                     Logout
 
