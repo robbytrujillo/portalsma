@@ -63,6 +63,12 @@
 
     <script src="../assets/js/app.js"></script>
 
+    <!-- DataTables -->
+
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+
+    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap4.min.js"></script>
+
     <script>
 $(function() {
 
@@ -249,6 +255,253 @@ $(".btn-logout").click(function(e) {
         }
 
     });
+
+});
+
+$(".btn-edit").click(function() {
+
+    $("#edit_id").val($(this).data("id"));
+
+    $("#edit_nama").val($(this).data("nama"));
+
+    $("#edit_icon").val($(this).data("icon"));
+
+    $("#edit_warna").val($(this).data("warna"));
+
+    $("#edit_urutan").val($(this).data("urutan"));
+
+    $("#edit_status").val($(this).data("status"));
+
+    $("#edit_deskripsi").val($(this).data("deskripsi"));
+
+});
+    </script>
+
+    <script>
+$(function() {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Preview Bootstrap Icon
+    |--------------------------------------------------------------------------
+    */
+
+    $("#iconTambah").on("keyup change", function() {
+
+        let icon = $(this).val();
+
+        if (icon == "") {
+
+            icon = "bi-grid-fill";
+
+        }
+
+        $("#previewIconTambah").html(
+
+            '<i class="bi ' + icon + '"></i>'
+
+        );
+
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Preview Warna
+    |--------------------------------------------------------------------------
+    */
+
+    $("#warnaTambah").change(function() {
+
+        $("#previewWarnaTambah").css(
+
+            "background",
+
+            $(this).val()
+
+        );
+
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Loading Button
+    |--------------------------------------------------------------------------
+    */
+
+    $("#formTambahKategori").submit(function() {
+
+        $("#btnSimpanKategori")
+
+            .prop("disabled", true)
+
+            .html('<span class="spinner-border spinner-border-sm mr-2"></span>Menyimpan...');
+
+    });
+
+});
+    </script>
+
+    <script>
+$(function() {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mengisi Modal Edit
+    |--------------------------------------------------------------------------
+    */
+
+    $(".btn-edit").click(function() {
+
+        $("#edit_id").val($(this).data("id"));
+
+        $("#edit_nama").val($(this).data("nama"));
+
+        $("#edit_icon").val($(this).data("icon"));
+
+        $("#edit_warna").val($(this).data("warna"));
+
+        $("#edit_urutan").val($(this).data("urutan"));
+
+        $("#edit_status").val($(this).data("status"));
+
+        $("#edit_deskripsi").val($(this).data("deskripsi"));
+
+        $("#previewIconEdit").html(
+
+            '<i class="bi ' + $(this).data("icon") + '"></i>'
+
+        );
+
+        $("#previewWarnaEdit").css(
+
+            "background",
+
+            $(this).data("warna")
+
+        );
+
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Preview Icon
+    |--------------------------------------------------------------------------
+    */
+
+    $("#edit_icon").keyup(function() {
+
+        let icon = $(this).val();
+
+        if (icon == "") {
+
+            icon = "bi-grid-fill";
+
+        }
+
+        $("#previewIconEdit").html(
+
+            '<i class="bi ' + icon + '"></i>'
+
+        );
+
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Preview Warna
+    |--------------------------------------------------------------------------
+    */
+
+    $("#edit_warna").change(function() {
+
+        $("#previewWarnaEdit").css(
+
+            "background",
+
+            $(this).val()
+
+        );
+
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Loading Button
+    |--------------------------------------------------------------------------
+    */
+
+    $("#formEditKategori").submit(function() {
+
+        $("#btnUpdateKategori")
+
+            .prop("disabled", true)
+
+            .html(
+
+                '<span class="spinner-border spinner-border-sm mr-2"></span>Mengupdate...'
+
+            );
+
+    });
+
+});
+    </script>
+
+    <script>
+$(function() {
+
+    $("#tableKategori").DataTable({
+
+        responsive: true,
+
+        autoWidth: false,
+
+        pageLength: 10,
+
+        lengthMenu: [
+            [10, 25, 50, 100],
+            [10, 25, 50, 100]
+        ],
+
+        order: [
+            [3, "asc"]
+        ],
+
+        language: {
+
+            search: "Cari :",
+
+            lengthMenu: "Tampilkan _MENU_ data",
+
+            zeroRecords: "Data tidak ditemukan",
+
+            info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
+
+            infoEmpty: "Tidak ada data",
+
+            paginate: {
+
+                first: "Awal",
+
+                last: "Akhir",
+
+                next: "›",
+
+                previous: "‹"
+
+            }
+
+        }
+
+    });
+
+});
+    </script>
+
+    <script>
+$(function() {
+
+    $('[data-toggle="tooltip"]').tooltip();
 
 });
     </script>

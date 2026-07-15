@@ -4,20 +4,105 @@ $pageTitle = "Kategori";
 
 require_once "../config/config.php";
 
-include "includes/header.php";
+/*
+|--------------------------------------------------------------------------
+| Cek Login
+|--------------------------------------------------------------------------
+*/
 
-include "includes/sidebar.php";
+if (!isset($_SESSION['id'])) {
 
-include "includes/navbar.php";
+    header("Location: login.php");
+    exit;
 
+}
 
 /*
 |--------------------------------------------------------------------------
-| Proses Tambah Kategori
+| Include Template
+|--------------------------------------------------------------------------
+*/
+
+include "includes/header.php";
+include "includes/sidebar.php";
+include "includes/navbar.php";
+
+/*
+|--------------------------------------------------------------------------
+| CSRF Token
+|--------------------------------------------------------------------------
+*/
+
+if (empty($_SESSION['csrf'])) {
+
+    $_SESSION['csrf'] = bin2hex(random_bytes(32));
+
+}
+
+/*
+|--------------------------------------------------------------------------
+| Flash Notification
+|--------------------------------------------------------------------------
+*/
+
+$flash = null;
+
+if (isset($_GET['success'])) {
+
+    $flash = [
+        'icon'  => 'success',
+        'title' => 'Berhasil',
+        'text'  => 'Kategori berhasil ditambahkan.'
+    ];
+
+}
+
+if (isset($_GET['update'])) {
+
+    $flash = [
+        'icon'  => 'success',
+        'title' => 'Berhasil',
+        'text'  => 'Kategori berhasil diperbarui.'
+    ];
+
+}
+
+if (isset($_GET['delete'])) {
+
+    $flash = [
+        'icon'  => 'success',
+        'title' => 'Berhasil',
+        'text'  => 'Kategori berhasil dihapus.'
+    ];
+
+}
+
+if (isset($_GET['error'])) {
+
+    $flash = [
+        'icon'  => 'error',
+        'title' => 'Gagal',
+        'text'  => 'Terjadi kesalahan.'
+    ];
+
+}
+
+/*
+|--------------------------------------------------------------------------
+| Proses Tambah
 |--------------------------------------------------------------------------
 */
 
 if (isset($_POST['simpan'])) {
+
+    if (
+        !isset($_POST['csrf']) ||
+        $_POST['csrf'] !== $_SESSION['csrf']
+    ) {
+
+        exit("Invalid CSRF Token");
+
+    }
 
     $nama       = trim($_POST['nama_kategori']);
     $icon       = trim($_POST['icon']);
@@ -26,35 +111,47 @@ if (isset($_POST['simpan'])) {
     $status     = trim($_POST['status']);
     $deskripsi  = trim($_POST['deskripsi']);
 
-    if ($nama == '') {
+    if ($nama == "") {
 
-        echo "<script>
-            Swal.fire({
-                icon:'error',
-                title:'Gagal',
-                text:'Nama kategori wajib diisi.'
-            });
-        </script>";
+        $flash = [
+            'icon'  => 'warning',
+            'title' => 'Peringatan',
+            'text'  => 'Nama kategori wajib diisi.'
+        ];
 
     } else {
 
-        $cek = mysqli_query($conn, "
-            SELECT id
-            FROM kategori
-            WHERE nama_kategori='" . mysqli_real_escape_string($conn, $nama) . "'
-            LIMIT 1
-        ");
+        $stmt = mysqli_prepare(
+            $conn,
+            "SELECT id
+             FROM kategori
+             WHERE nama_kategori=?
+             LIMIT 1"
+        );
 
-        if (mysqli_num_rows($cek) > 0) {
+        mysqli_stmt_bind_param(
+            $stmt,
+            "s",
+            $nama
+        );
 
-            echo "<script>
-                Swal.fire({
-                    icon:'warning',
-                    title:'Kategori sudah ada'
-                });
-            </script>";
+        mysqli_stmt_execute($stmt);
+
+        mysqli_stmt_store_result($stmt);
+
+        if (mysqli_stmt_num_rows($stmt) > 0) {
+
+            mysqli_stmt_close($stmt);
+
+            $flash = [
+                'icon'  => 'warning',
+                'title' => 'Peringatan',
+                'text'  => 'Nama kategori sudah digunakan.'
+            ];
 
         } else {
+
+            mysqli_stmt_close($stmt);
 
             $stmt = mysqli_prepare(
                 $conn,
@@ -68,7 +165,10 @@ if (isset($_POST['simpan'])) {
                     status,
                     created_at
                 )
-                VALUES (?,?,?,?,?,?,NOW())"
+                VALUES
+                (
+                    ?,?,?,?,?,?,NOW()
+                )"
             );
 
             mysqli_stmt_bind_param(
@@ -84,24 +184,20 @@ if (isset($_POST['simpan'])) {
 
             if (mysqli_stmt_execute($stmt)) {
 
-                echo "<script>
-                    window.location='kategori.php?success=1';
-                </script>";
+                mysqli_stmt_close($stmt);
+
+                header("Location:kategori.php?success=1");
                 exit;
-
-            } else {
-
-                echo "<script>
-                    Swal.fire({
-                        icon:'error',
-                        title:'Database Error',
-                        text:'".addslashes(mysqli_error($conn))."'
-                    });
-                </script>";
 
             }
 
             mysqli_stmt_close($stmt);
+
+            $flash = [
+                'icon'  => 'error',
+                'title' => 'Database Error',
+                'text'  => mysqli_error($conn)
+            ];
 
         }
 
@@ -109,207 +205,174 @@ if (isset($_POST['simpan'])) {
 
 }
 
-
 /*
 |--------------------------------------------------------------------------
-| Ambil Data Kategori
+| Proses Update
 |--------------------------------------------------------------------------
 */
 
-$query = mysqli_query($conn, "
+if (isset($_POST['update'])) {
 
-SELECT *
+    if (
+        !isset($_POST['csrf']) ||
+        $_POST['csrf'] !== $_SESSION['csrf']
+    ) {
 
-FROM kategori
+        exit("Invalid CSRF Token");
 
-ORDER BY urutan ASC,nama_kategori ASC
+    }
 
-");
+    $id         = (int) $_POST['id'];
+    $nama       = trim($_POST['nama_kategori']);
+    $icon       = trim($_POST['icon']);
+    $warna      = trim($_POST['warna']);
+    $urutan     = (int) $_POST['urutan'];
+    $status     = trim($_POST['status']);
+    $deskripsi  = trim($_POST['deskripsi']);
 
+    $stmt = mysqli_prepare(
+        $conn,
+        "UPDATE kategori
+        SET
+            nama_kategori=?,
+            icon=?,
+            warna=?,
+            urutan=?,
+            status=?,
+            deskripsi=?
+        WHERE id=?"
+    );
+
+    mysqli_stmt_bind_param(
+        $stmt,
+        "sssissi",
+        $nama,
+        $icon,
+        $warna,
+        $urutan,
+        $status,
+        $deskripsi,
+        $id
+    );
+
+    if (mysqli_stmt_execute($stmt)) {
+
+        mysqli_stmt_close($stmt);
+
+        header("Location:kategori.php?update=1");
+        exit;
+
+    }
+
+    mysqli_stmt_close($stmt);
+
+    $flash = [
+        'icon'  => 'error',
+        'title' => 'Database Error',
+        'text'  => mysqli_error($conn)
+    ];
+
+}
+
+/*
+|--------------------------------------------------------------------------
+| Ambil Data
+|--------------------------------------------------------------------------
+*/
+
+$query = mysqli_query(
+    $conn,
+    "SELECT *
+     FROM kategori
+     ORDER BY urutan ASC, nama_kategori ASC"
+);
+
+if (!$query) {
+
+    die("Query Error : " . mysqli_error($conn));
+
+}
+
+$totalKategori = mysqli_num_rows($query);
 ?>
 
-<div class="row">
+<div class="container-fluid">
 
-    <div class="col-lg-12">
+    <div class="row mb-4">
 
-        <div class="card">
+        <div class="col-12">
 
-            <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
 
-                <div class="row align-items-center">
+                <div>
 
-                    <div class="col-md-6">
+                    <h3 class="font-weight-bold mb-1">
 
-                        <h4 class="mb-0">
+                        <i class="bi bi-grid text-primary mr-2"></i>
 
-                            Data Kategori
+                        Manajemen Kategori
 
-                        </h4>
+                    </h3>
 
-                    </div>
+                    <small class="text-muted">
 
-                    <div class="col-md-6 text-md-right mt-3 mt-md-0">
+                        Kelola kategori Portal Sekolah
 
-                        <button class="btn btn-primary" data-toggle="modal" data-target="#modalTambah">
-
-                            <i class="bi bi-plus-circle"></i>
-
-                            Tambah Kategori
-
-                        </button>
-
-                    </div>
+                    </small>
 
                 </div>
 
+                <button class="btn btn-primary mt-3 mt-md-0" data-toggle="modal" data-target="#modalTambah"
+                    style="border-radius:30px;">
+
+                    <i class="bi bi-plus-circle mr-1"></i>
+
+                    Tambah Kategori
+
+                </button>
+
             </div>
 
-            <div class="card-body">
+        </div>
 
-                <div class="table-responsive">
+    </div>
 
-                    <table class="table table-bordered table-hover" id="tableKategori">
+    <!-- Statistik -->
 
-                        <thead class="thead-light">
+    <div class="row mb-4">
 
-                            <tr>
+        <div class="col-md-4 mb-3">
 
-                                <th width="60">
+            <div class="card border-0 shadow-sm">
 
-                                    No
+                <div class="card-body">
 
-                                </th>
+                    <div class="d-flex align-items-center">
 
-                                <th>
+                        <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center"
+                            style="width:60px;height:60px;">
 
-                                    Icon
+                            <i class="bi bi-grid-fill h4 mb-0"></i>
 
-                                </th>
+                        </div>
 
-                                <th>
+                        <div class="ml-3">
 
-                                    Nama
+                            <small class="text-muted">
 
-                                </th>
+                                Total Kategori
 
-                                <th>
+                            </small>
 
-                                    Warna
+                            <h3 class="font-weight-bold mb-0">
 
-                                </th>
+                                <?= $totalKategori; ?>
 
-                                <th>
+                            </h3>
 
-                                    Status
+                        </div>
 
-                                </th>
-
-                                <th width="160">
-
-                                    Aksi
-
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            <?php
-
-$no=1;
-
-while($row=mysqli_fetch_assoc($query)):
-
-?>
-
-                            <tr>
-
-                                <td>
-
-                                    <?= $no++; ?>
-
-                                </td>
-
-                                <td>
-
-                                    <span
-                                        class="d-inline-flex align-items-center justify-content-center rounded-circle text-white"
-                                        style="width:45px;height:45px;background:<?= htmlspecialchars($row['warna']); ?>;">
-
-                                        <i class="bi <?= htmlspecialchars($row['icon']); ?>"></i>
-
-                                    </span>
-
-                                </td>
-
-                                <td>
-
-                                    <strong>
-
-                                        <?= htmlspecialchars($row['nama_kategori']); ?>
-
-                                    </strong>
-
-                                </td>
-
-                                <td>
-
-                                    <span class="badge badge-light">
-
-                                        <?= htmlspecialchars($row['warna']); ?>
-
-                                    </span>
-
-                                </td>
-
-                                <td>
-
-                                    <?php if($row['status']=="Aktif"): ?>
-
-                                    <span class="badge badge-success">
-
-                                        Aktif
-
-                                    </span>
-
-                                    <?php else: ?>
-
-                                    <span class="badge badge-danger">
-
-                                        Nonaktif
-
-                                    </span>
-
-                                    <?php endif; ?>
-
-                                </td>
-
-                                <td>
-
-                                    <button class="btn btn-warning btn-sm">
-
-                                        <i class="bi bi-pencil"></i>
-
-                                    </button>
-
-                                    <a href="kategori_hapus.php?id=<?= $row['id']; ?>"
-                                        class="btn btn-danger btn-sm btn-delete">
-
-                                        <i class="bi bi-trash"></i>
-
-                                    </a>
-
-                                </td>
-
-                            </tr>
-
-                            <?php endwhile; ?>
-
-                        </tbody>
-
-                    </table>
+                    </div>
 
                 </div>
 
@@ -319,134 +382,270 @@ while($row=mysqli_fetch_assoc($query)):
 
     </div>
 
-</div>
+    <!-- Card -->
 
-<!-- =====================================================
-     MODAL TAMBAH KATEGORI
-====================================================== -->
+    <div class="card shadow-sm border-0">
 
-<div class="modal fade" id="modalTambah" tabindex="-1">
+        <div class="card-header bg-white border-0">
 
-    <div class="modal-dialog modal-lg">
+            <div class="row align-items-center">
 
-        <form method="POST">
+                <div class="col-md-6">
 
-            <div class="modal-content">
+                    <h5 class="mb-0">
 
-                <div class="modal-header">
-
-                    <h5 class="modal-title">
-
-                        Tambah Kategori
+                        Daftar Kategori
 
                     </h5>
 
-                    <button class="close" data-dismiss="modal">
-
-                        &times;
-
-                    </button>
-
                 </div>
 
-                <div class="modal-body">
+                <div class="col-md-6 text-md-right">
 
-                    <div class="form-group">
+                    <small class="text-muted">
 
-                        <label>Nama Kategori</label>
+                        Total :
 
-                        <input type="text" name="nama_kategori" class="form-control" required>
+                        <strong>
 
-                    </div>
+                            <?= $totalKategori; ?>
 
-                    <div class="form-row">
+                        </strong>
 
-                        <div class="form-group col-md-6">
+                        Data
 
-                            <label>Bootstrap Icon</label>
-
-                            <input type="text" name="icon" class="form-control" placeholder="bi-grid">
-
-                        </div>
-
-                        <div class="form-group col-md-6">
-
-                            <label>Warna</label>
-
-                            <input type="color" name="warna" class="form-control" value="#0d6efd">
-
-                        </div>
-
-                    </div>
-
-                    <div class="form-row">
-
-                        <div class="form-group col-md-6">
-
-                            <label>Urutan</label>
-
-                            <input type="number" name="urutan" class="form-control" value="1">
-
-                        </div>
-
-                        <div class="form-group col-md-6">
-
-                            <label>Status</label>
-
-                            <select name="status" class="form-control">
-
-                                <option value="Aktif">
-
-                                    Aktif
-
-                                </option>
-
-                                <option value="Nonaktif">
-
-                                    Nonaktif
-
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-                    <div class="form-group">
-
-                        <label>Deskripsi</label>
-
-                        <textarea name="deskripsi" rows="4" class="form-control"></textarea>
-
-                    </div>
-
-                </div>
-
-                <div class="modal-footer">
-
-                    <button class="btn btn-secondary" data-dismiss="modal" type="button">
-
-                        Batal
-
-                    </button>
-
-                    <button class="btn btn-primary" type="submit" name="simpan">
-
-                        <i class="bi bi-save"></i>
-
-                        Simpan
-
-                    </button>
+                    </small>
 
                 </div>
 
             </div>
 
-        </form>
+        </div>
+
+        <div class="card-body">
+
+            <?php if($totalKategori>0): ?>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover table-bordered align-middle" id="tableKategori" width="100%">
+
+                    <thead class="thead-light">
+
+                        <tr>
+
+                            <th width="60">
+
+                                No
+
+                            </th>
+
+                            <th width="90">
+
+                                Icon
+
+                            </th>
+
+                            <th>
+
+                                Nama
+
+                            </th>
+
+                            <th width="90">
+
+                                Urutan
+
+                            </th>
+
+                            <th width="120">
+
+                                Status
+
+                            </th>
+
+                            <th width="180">
+
+                                Aksi
+
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        <?php
+
+                    $no=1;
+
+                    while($row=mysqli_fetch_assoc($query)):
+
+                    ?>
+
+                        <tr>
+
+                            <td class="text-center">
+
+                                <?= $no++; ?>
+
+                            </td>
+
+                            <td class="text-center">
+
+                                <div style="
+
+                                width:50px;
+
+                                height:50px;
+
+                                background:<?= htmlspecialchars($row['warna']); ?>;
+
+                                border-radius:50%;
+
+                                display:flex;
+
+                                align-items:center;
+
+                                justify-content:center;
+
+                                color:#fff;
+
+                                margin:auto;
+
+                                ">
+
+                                    <i class="bi <?= htmlspecialchars($row['icon']); ?>">
+
+                                    </i>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                <strong>
+
+                                    <?= htmlspecialchars($row['nama_kategori']); ?>
+
+                                </strong>
+
+                                <?php if(!empty($row['deskripsi'])): ?>
+
+                                <br>
+
+                                <small class="text-muted">
+
+                                    <?= htmlspecialchars($row['deskripsi']); ?>
+
+                                </small>
+
+                                <?php endif; ?>
+
+                            </td>
+
+                            <td class="text-center">
+
+                                <span class="badge badge-info">
+
+                                    <?= $row['urutan']; ?>
+
+                                </span>
+
+                            </td>
+
+                            <td class="text-center">
+
+                                <?php if($row['status']=="Aktif"): ?>
+
+                                <span class="badge badge-success">
+
+                                    Aktif
+
+                                </span>
+
+                                <?php else: ?>
+
+                                <span class="badge badge-danger">
+
+                                    Nonaktif
+
+                                </span>
+
+                                <?php endif; ?>
+
+                            </td>
+
+                            <td class="text-center">
+
+                                <button class="btn btn-warning btn-sm btn-edit" data-id="<?= $row['id']; ?>"
+                                    data-nama="<?= htmlspecialchars($row['nama_kategori']); ?>"
+                                    data-icon="<?= htmlspecialchars($row['icon']); ?>"
+                                    data-warna="<?= htmlspecialchars($row['warna']); ?>"
+                                    data-urutan="<?= $row['urutan']; ?>" data-status="<?= $row['status']; ?>"
+                                    data-deskripsi="<?= htmlspecialchars($row['deskripsi']); ?>" data-toggle="modal"
+                                    data-target="#modalEdit" title="Edit">
+
+                                    <i class="bi bi-pencil-square"></i>
+
+                                </button>
+
+                                <a href="kategori_hapus.php?id=<?= $row['id']; ?>"
+                                    class="btn btn-danger btn-sm btn-delete" title="Hapus">
+
+                                    <i class="bi bi-trash"></i>
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                        <?php endwhile; ?>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <?php else: ?>
+
+            <div class="text-center py-5">
+
+                <i class="bi bi-folder2-open display-3 text-secondary">
+
+                </i>
+
+                <h4 class="mt-3">
+
+                    Belum Ada Data Kategori
+
+                </h4>
+
+                <p class="text-muted">
+
+                    Klik tombol Tambah Kategori untuk membuat kategori pertama.
+
+                </p>
+
+                <button class="btn btn-primary" style="border-radius:30px;" data-toggle="modal"
+                    data-target="#modalTambah">
+
+                    <i class="bi bi-plus-circle mr-2"></i>
+
+                    Tambah Kategori
+
+                </button>
+
+            </div>
+
+            <?php endif; ?>
+
+        </div>
 
     </div>
 
 </div>
-
-<? include "includes/footer.php"; ?>
