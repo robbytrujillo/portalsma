@@ -171,8 +171,8 @@ ORDER BY urutan ASC
 
                             </p>
 
-                            <a href="<?= htmlspecialchars($sub['url']); ?>" class="btn btn-primary btn-pill btn-block"
-                                target="_blank">
+                            <a href="<?= htmlspecialchars($sub['url']); ?>"
+                                class="btn btn-primary rounded-pill btn-pill btn-block" target="_blank">
 
                                 <i class="bi bi-box-arrow-up-right"></i>
 
@@ -218,24 +218,12 @@ ORDER BY urutan ASC
 
     </section>
 
-    <footer class="footer bg-white py-4">
+    <footer class="footer py-4 bg-white">
 
-        <div class="container">
-
-            <div class="text-center">
-
-                <small>
-
-                    Copyright &copy;
-
-                    <?= date('Y'); ?>
-
-                    IT Development
-
-                </small>
-
-            </div>
-
+        <div class="container-fluid px-4 text-center">
+            <h6 class="mb-0"><b>Copyright &copy; <script>
+                    document.write(new Date().getFullYear())
+                    </script> <a href="https://robbyilham.com/" target="_blank">by</a> IT Development IHBS</b></h6>
         </div>
 
     </footer>

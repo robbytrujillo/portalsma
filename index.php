@@ -127,7 +127,7 @@ ORDER BY urutan ASC");
 
                             </p>
 
-                            <a href="kategori.php?id=<?= $row['id']; ?>" class="btn btn-primary btn-pill">
+                            <a href="kategori.php?id=<?= $row['id']; ?>" class="btn btn-primary rounded-pill btn-pill">
 
                                 <i class="bi bi-arrow-right-circle"></i>
 
@@ -167,20 +167,10 @@ ORDER BY urutan ASC");
 
     <footer class="footer py-4 bg-white">
 
-        <div class="container">
-
-            <div class="text-center">
-
-                <small>
-
-                    Copyright © <?= date('Y'); ?>
-
-                    IT Development
-
-                </small>
-
-            </div>
-
+        <div class="container-fluid px-4 text-center">
+            <h6 class="mb-0"><b>Copyright &copy; <script>
+                    document.write(new Date().getFullYear())
+                    </script> <a href="https://robbyilham.com/" target="_blank">by</a> IT Development IHBS</b></h6>
         </div>
 
     </footer>

@@ -353,22 +353,12 @@ ORDER BY subkategori.urutan ASC
 
     </section>
 
-    <footer class="bg-white py-4 mt-5">
+    <footer class="footer py-4 bg-white">
 
-        <div class="container">
-
-            <div class="text-center">
-
-                <small class="text-muted">
-
-                    Copyright &copy;
-                    <?= date('Y'); ?>
-                    IT Development
-
-                </small>
-
-            </div>
-
+        <div class="container-fluid px-4 text-center">
+            <h6 class="mb-0"><b>Copyright &copy; <script>
+                    document.write(new Date().getFullYear())
+                    </script> <a href="https://robbyilham.com/" target="_blank">by</a> IT Development IHBS</b></h6>
         </div>
 
     </footer>
