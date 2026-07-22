@@ -71,7 +71,7 @@ ORDER BY urutan ASC");
 
                 <p class="text-muted">
 
-                    Seluruh layanan sekolah dalam satu portal.
+                    Seluruh layanan sekolah dalam satu wadah.
 
                 </p>
 
